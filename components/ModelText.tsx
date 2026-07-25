@@ -13,12 +13,22 @@ import React from "react";
  */
 
 // Deliberately tolerant. These markers come out of a small model's sampler, so they arrive
-// mangled surprisingly often — observed in the wild: "##end_ quote##", "##end_quotechloro##".
-// Matching only the exact token left that debris on screen.
-const QUOTE_OPEN = /##\s*begin[_\s]*quote[^#\n]{0,24}##/gi;
-const QUOTE_CLOSE = /##\s*end[_\s]*quote[^#\n]{0,24}##/gi;
-// A marker whose closing "##" the model dropped entirely.
-const QUOTE_STRAY = /##\s*(?:begin|end)[_\s]*quote[^#\n]{0,24}(?=\s|$)/gi;
+/**
+ * `##…##` is a control-token shape leaked from the RAFT training template — it never occurs in
+ * real prose. The sampler mangles it constantly; forms seen in the wild include
+ * `##end_quote##`, `##end_ quote##`, `##end_quotechloro##`, `##end_of_quote###` and outright
+ * hallucinations like `##batchmode##`.
+ *
+ * So rather than enumerate variants (a losing game), match the SHAPE once and classify:
+ * anything mentioning "quote" toggles an evidence block, any other `##…##` token is sampler
+ * noise and is dropped.
+ *
+ * `(?![#\s])` requires the whole run of hashes to be consumed and the next character to be
+ * non-space, which is what separates a control token from a markdown `## Heading`.
+ */
+const HASH_MARKER = /#{2,}(?![#\s])[^#\n]{0,40}#{1,4}/g;
+// …and the same token with its closing hashes dropped entirely, at a line end.
+const HASH_TRAILING = /#{2,}(?![#\s])[^#\n]{0,40}$/gm;
 
 function inline(text: string, key: string): React.ReactNode[] {
   const out: React.ReactNode[] = [];
@@ -51,10 +61,8 @@ export default function ModelText({ text }: { text: string }) {
   if (!text) return null;
 
   // Turn the RAFT evidence markers into a real quotation.
-  const quoted = text
-    .replace(QUOTE_OPEN, "␟")
-    .replace(QUOTE_CLOSE, "␟")
-    .replace(QUOTE_STRAY, "");
+  const classify = (m: string) => (/quote/i.test(m) ? "␟" : "");
+  const quoted = text.replace(HASH_MARKER, classify).replace(HASH_TRAILING, classify);
   const segments = quoted.split("␟");
 
   return (
