@@ -57,7 +57,8 @@ export default function ArenaApp() {
 
       {/* hero */}
       <header className="hero">
-        <span className="tag" style={{ color: "var(--accent)" }}>HEAD-TO-HEAD · TRAINED &amp; ALIGNED BY HARMAN SANDHU</span>
+        <div className="brand">Trained, fine-tuned &amp; aligned by Harman Sandhu</div>
+        <span className="tag" style={{ color: "var(--accent)" }}>HEAD-TO-HEAD · 13 MODELS, ONE QUESTION</span>
         <h1>SLM Arena</h1>
         <p className="lead">
           Thirteen small language models — three sizes (125M, 500M, Gemma&nbsp;2B) across their
