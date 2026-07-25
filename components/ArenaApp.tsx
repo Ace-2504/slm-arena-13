@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import ThemePicker from "@/components/ThemePicker";
+import LiveArena from "@/components/LiveArena";
 import DATA from "@/lib/arena-data.json";
 
 type Ans = { r: string; s: number; g: boolean };
@@ -78,6 +79,7 @@ export default function ArenaApp() {
         <span className="tag">VIZUARA · SLM ENGINEERING</span>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <a href="#arena" className="tag" style={{ fontSize: "0.72rem" }}>Arena</a>
+          <a href="#live" className="tag" style={{ fontSize: "0.72rem" }}>Live</a>
           <a href="#leaderboard" className="tag" style={{ fontSize: "0.72rem" }}>Leaderboard</a>
           <a href="#judge" className="tag" style={{ fontSize: "0.72rem" }}>The judge</a>
           <ThemePicker />
@@ -184,6 +186,11 @@ export default function ArenaApp() {
           Ranking is per-question, by the judge&apos;s 0–10 correctness score. Model names link to each model&apos;s own site
           (training details, cost, architecture). Base models are prompted few-shot and are the floor.
         </p>
+      </section>
+
+      {/* LIVE ARENA — your own question, answered by every model */}
+      <section id="live" className="section">
+        <LiveArena models={MODELS} />
       </section>
 
       {/* LEADERBOARD */}
