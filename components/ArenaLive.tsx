@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import ModelText from "@/components/ModelText";
 
 /**
  * The arena: one question -> all 13 models generate LIVE on the local GPU -> every answer is
@@ -154,7 +155,7 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
         <span className="tag">Arena</span>
         <span className={live ? "badge badge-accent" : "badge"}>
-          {live === null ? "connecting…" : live ? "live · local GPU + LLM judge" : "run it locally to try this"}
+          {live === null ? "connecting…" : live ? "live · generated and judged in real time" : "demo unavailable"}
         </span>
         {busy && <span className="badge">
           {phase === "generating" ? `generating ${done}/${models.length}` : "judging…"}
@@ -163,8 +164,8 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
 
       <h2 style={{ marginTop: 0 }}>One question, {models.length} models, judged live</h2>
       <p style={{ margin: "6px 0 14px" }}>
-        Pick a held-out question or write your own, and every model answers it in turn on the local
-        GPU. A blind LLM judge then scores each answer 0–10. A held-out question ships with its
+        Pick a held-out question or write your own, and every model answers it in turn. A blind LLM
+        judge then scores each answer 0–10. A held-out question ships with its
         source document and a gold answer — the models read the document, and the judge grades
         against the reference. Your own question is asked closed-book and graded from the judge&apos;s
         own knowledge.
@@ -236,8 +237,8 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
       {err && <p style={{ color: "var(--accent)", marginTop: 12, fontSize: "0.88rem" }}>{err}</p>}
       {live === false && (
         <p style={{ marginTop: 12, fontSize: "0.88rem", color: "var(--fg-dim)" }}>
-          These models run on a local GPU. Start the inference server on this machine and reload —
-          the arena connects automatically.
+          The inference endpoint is unavailable right now. The leaderboard below is unaffected — it
+          comes from the frozen offline evaluation.
         </p>
       )}
 
@@ -270,7 +271,9 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
                   color: row.error ? "var(--accent-3)" : "var(--fg-muted)",
                   maxHeight: 170, overflow: "auto",
                 }}>
-                  {row.error ? row.error : row.status === "queued" ? "—" : row.text || "…"}
+                  {row.error ? row.error
+                    : row.status === "queued" ? "—"
+                    : row.text ? <ModelText text={row.text} /> : "…"}
                 </p>
                 {row.parts && (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
