@@ -12,8 +12,13 @@ import React from "react";
  * so untrusted model output can never inject markup.
  */
 
-const QUOTE_OPEN = /##begin_quote##/gi;
-const QUOTE_CLOSE = /##end_quote##/gi;
+// Deliberately tolerant. These markers come out of a small model's sampler, so they arrive
+// mangled surprisingly often — observed in the wild: "##end_ quote##", "##end_quotechloro##".
+// Matching only the exact token left that debris on screen.
+const QUOTE_OPEN = /##\s*begin[_\s]*quote[^#\n]{0,24}##/gi;
+const QUOTE_CLOSE = /##\s*end[_\s]*quote[^#\n]{0,24}##/gi;
+// A marker whose closing "##" the model dropped entirely.
+const QUOTE_STRAY = /##\s*(?:begin|end)[_\s]*quote[^#\n]{0,24}(?=\s|$)/gi;
 
 function inline(text: string, key: string): React.ReactNode[] {
   const out: React.ReactNode[] = [];
@@ -46,7 +51,10 @@ export default function ModelText({ text }: { text: string }) {
   if (!text) return null;
 
   // Turn the RAFT evidence markers into a real quotation.
-  const quoted = text.replace(QUOTE_OPEN, "␟").replace(QUOTE_CLOSE, "␟");
+  const quoted = text
+    .replace(QUOTE_OPEN, "␟")
+    .replace(QUOTE_CLOSE, "␟")
+    .replace(QUOTE_STRAY, "");
   const segments = quoted.split("␟");
 
   return (
