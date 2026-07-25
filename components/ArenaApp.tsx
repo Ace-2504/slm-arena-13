@@ -96,7 +96,7 @@ export default function ArenaApp() {
 
       {tab === "leaderboard" && (
         <section id="leaderboard" className="section" style={{ marginTop: 0 }}>
-          <div className="panel card" style={{ overflowX: "auto" }}>
+          <div className="panel card breakout" style={{ overflowX: "auto" }}>
             <span className="tag">Leaderboard · frozen held-out evaluation</span>
             <h2 style={{ marginTop: 6 }}>Mean judge score over all {DATA.n_questions_total} questions</h2>
             <p style={{ margin: "6px 0 16px" }}>
@@ -105,14 +105,14 @@ export default function ArenaApp() {
               blind judge scored each one. The per-source columns split those same items by where
               the document came from.
             </p>
-            <table style={{ minWidth: 780 }}>
+            <table className="lb-table" style={{ minWidth: 1020 }}>
               <thead>
                 <tr>
                   <th>#</th><th>Model</th><th>Size</th><th>Stage</th>
                   <th style={{ textAlign: "right" }}>Mean /10</th>
                   <th></th>
-                  {SOURCES.map((s) => <th key={s.key} style={{ textAlign: "right" }}>{s.label}</th>)}
-                  <th style={{ textAlign: "right" }}>Grounded</th>
+                  {SOURCES.map((s, si) => <th key={s.key} className={si === 0 ? "lb-group" : undefined} style={{ textAlign: "right" }}>{s.label}</th>)}
+                  <th className="lb-group" style={{ textAlign: "right" }}>Grounded</th>
                   <th style={{ textAlign: "right" }}>Fabric.↓</th>
                   <th style={{ textAlign: "right" }}>Token-F1</th>
                   <th style={{ textAlign: "right" }}>n</th>
@@ -127,17 +127,17 @@ export default function ArenaApp() {
                     <td style={{ color: "var(--fg-muted)" }}>{m.family}</td>
                     <td style={{ color: "var(--fg-muted)" }}>{m.stage}</td>
                     <td style={{ textAlign: "right" }}><ScorePill s={m.score} /></td>
-                    <td style={{ width: 90 }}>
+                    <td style={{ width: 110, minWidth: 110 }}>
                       <div style={{ height: 7, borderRadius: 999, background: "var(--panel-2)", overflow: "hidden" }}>
                         <div style={{ width: `${m.score * 10}%`, height: "100%", background: scoreColor(m.score) }} />
                       </div>
                     </td>
-                    {SOURCES.map((s) => (
-                      <td key={s.key} className="num" style={{ color: "var(--fg-muted)" }}>
+                    {SOURCES.map((s, si) => (
+                      <td key={s.key} className={si === 0 ? "num lb-group" : "num"} style={{ color: "var(--fg-muted)" }}>
                         {m.by_source?.[s.key]?.toFixed(2) ?? "–"}
                       </td>
                     ))}
-                    <td className="num" style={{ color: "var(--fg-muted)" }}>{m.grounded}%</td>
+                    <td className="num lb-group" style={{ color: "var(--fg-muted)" }}>{m.grounded}%</td>
                     <td className="num" style={{ color: "var(--fg-muted)" }}>{m.fabrication}%</td>
                     <td className="num" style={{ color: "var(--fg-muted)" }}>{m.token_f1?.toFixed(3)}</td>
                     <td className="num" style={{ color: "var(--fg-dim)" }}>{m.n}</td>

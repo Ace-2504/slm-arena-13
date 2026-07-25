@@ -123,3 +123,19 @@ footer { margin: 48px 0 40px; text-align: center; color: var(--fg-dim); }
 footer .badge-line { color: var(--fg-muted); letter-spacing: 0.12em; text-transform: uppercase;
   font-family: ui-monospace, monospace; font-size: 0.72rem; margin-top: 16px; }
 footer .src { color: var(--fg-dim); font-size: 0.82rem; margin-top: 8px; }
+
+/* ===== leaderboard: break out of the 960px column so 13 columns can breathe ===== */
+.breakout { width: 100%; }
+@media (min-width: 1080px) {
+  .breakout {
+    width: min(1280px, 94vw);
+    margin-left: calc(-1 * (min(1280px, 94vw) - 100%) / 2);
+  }
+}
+.lb-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.lb-table th, .lb-table td { padding: 11px 14px; white-space: nowrap; }
+.lb-table th:first-child, .lb-table td:first-child { padding-left: 4px; }
+.lb-table th:last-child,  .lb-table td:last-child  { padding-right: 4px; }
+.lb-table tbody tr:hover { background: var(--panel-2); }
+.lb-table td { border-top: 1px solid var(--border-soft); }
+.lb-group { border-left: 1px solid var(--border-soft); }
