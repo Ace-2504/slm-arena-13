@@ -14,7 +14,7 @@ type Q = { id: string; q: string; ctx: string; gold: string; source: string; ans
 type Row = {
   status: "queued" | "generating" | "answered" | "judging" | "done" | "error";
   text: string; secs?: number; tokens?: number;
-  score?: number; grounded?: boolean; reason?: string; error?: string;
+  score?: number; parts?: Record<string, number>; grounded?: boolean; reason?: string; error?: string;
 };
 
 // Endpoint is probed at runtime and overridable via ?api=<url> (quick-tunnel URLs rotate).
@@ -133,7 +133,7 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
         for (const [mid, v] of Object.entries(g.graded as Record<string, any>)) {
           next[mid] = v.error
             ? { ...next[mid], status: "done", error: v.error }
-            : { ...next[mid], status: "done", score: v.score, grounded: v.grounded, reason: v.reason };
+            : { ...next[mid], status: "done", score: v.score, parts: v.parts, grounded: v.grounded, reason: v.reason };
         }
         return next;
       });
@@ -145,8 +145,9 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
   }
 
   const busy = phase === "generating" || phase === "judging";
-  const ranked = models.slice().sort((a, b) => (rows[b.id]?.score ?? -1) - (rows[a.id]?.score ?? -1));
-  const ordered = phase === "done" ? ranked : models;
+  // Always lineage order (125M base -> ... -> Gemma RLAIF), never re-sorted by score: the point
+  // is to read a training pipeline top-to-bottom and see where each stage helps or hurts.
+  const ordered = models;
 
   return (
     <div className="panel card">
@@ -271,6 +272,16 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
                 }}>
                   {row.error ? row.error : row.status === "queued" ? "—" : row.text || "…"}
                 </p>
+                {row.parts && (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                    {[["correctness", 5], ["completeness", 2], ["groundedness", 2], ["clarity", 1]].map(
+                      ([k, max]) => (
+                        <span key={k as string} className="badge mono" title={`${k} out of ${max}`}>
+                          {(k as string).slice(0, 4)} {row.parts![k as string]}/{max}
+                        </span>
+                      ))}
+                  </div>
+                )}
                 {row.reason && (
                   <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "var(--fg-dim)", fontStyle: "italic" }}>
                     judge: {row.reason}
