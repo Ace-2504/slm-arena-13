@@ -61,7 +61,7 @@ export default function ArenaApp() {
         <h1>SLM Arena</h1>
         <p className="lead">
           Thirteen small language models — three sizes (125M, 500M, Gemma&nbsp;2B) across their
-          training stages — answering the <em>same</em> question live on a local GPU, then scored
+          training stages — answering the <em>same</em> question live, then scored
           0–10 by a blind LLM judge. Ask one of the held-out evaluation questions, where the judge
           is handed the gold answer so its scores are checkable, or write your own and watch all
           thirteen take a run at it.
@@ -226,7 +226,7 @@ export default function ArenaApp() {
       <footer>
         <div className="grad-divider" />
         <div className="badge-line">Arena built &amp; models aligned by Harman Sandhu</div>
-        <div className="src">Vizuara AI Labs · SLM engineering · live generation on a local GPU, judged by Gemini</div>
+        <div className="src">Vizuara AI Labs · SLM engineering · live generation, judged by Gemini</div>
       </footer>
     </div>
   );
