@@ -149,6 +149,22 @@ export default function ArenaApp() {
                 ))}
               </tbody>
             </table>
+
+            {/* How these numbers relate to the experiment reports — same inputs, different scale. */}
+            <div className="panel-inset" style={{
+              marginTop: 18, padding: "14px 16px",
+              borderLeft: "3px solid var(--accent-2)", lineHeight: 1.6, fontSize: "0.88rem",
+            }}>
+              <span className="tag" style={{ color: "var(--accent-2)" }}>Note</span>
+              <p style={{ margin: "6px 0 0", color: "var(--fg-muted)" }}>
+                Same 500 questions, same answers, same judge (<span className="mono">gemini-3.1-flash-lite</span>)
+                as the experiment reports — scored here on a 0–10 four-dimension rubric
+                (correctness&nbsp;+&nbsp;completeness&nbsp;+&nbsp;groundedness&nbsp;+&nbsp;clarity) rather
+                than the reports&apos; stricter 0–1 correctness scale, so the two numbers differ and
+                near-ties can swap order. Token-F1 and fabrication are identical in both.
+              </p>
+            </div>
+
             <p style={{ fontSize: "0.85rem", color: "var(--fg-dim)", marginTop: 14, lineHeight: 1.6 }}>
               <strong>Mean /10</strong> is {RUBRIC10
                 ? "the four-dimension rubric score (correctness + completeness + groundedness + clarity), the same scale the live arena uses"
