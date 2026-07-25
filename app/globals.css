@@ -142,14 +142,21 @@ footer .src { color: var(--fg-dim); font-size: 0.82rem; margin-top: 8px; }
 
 /* ===== authorship badge ===== */
 .brand {
-  display: inline-flex; align-items: center; gap: 8px;
+  /* flex (not inline-flex) so the kicker below starts on its own line;
+     width:fit-content keeps the pill hugging its text instead of stretching. */
+  display: flex; width: fit-content; align-items: center; gap: 8px;
   font-family: ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--fg);
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
   background: color-mix(in srgb, var(--accent) 10%, var(--panel-2));
-  padding: 6px 14px; border-radius: 999px; margin-bottom: 14px;
+  padding: 7px 15px; border-radius: 999px; margin-bottom: 20px;
 }
 .brand::before {
   content: ""; width: 6px; height: 6px; border-radius: 50%;
   background: var(--accent); flex: none;
 }
+
+/* ===== arena hero: centred ===== */
+.hero { text-align: center; }
+.hero .brand { margin-left: auto; margin-right: auto; }
+.hero p.lead { margin-left: auto; margin-right: auto; }
