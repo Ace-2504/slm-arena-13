@@ -1,25 +1,16 @@
 "use client";
-import { useMemo, useState } from "react";
 import ThemePicker from "@/components/ThemePicker";
-import LiveArena from "@/components/LiveArena";
+import ArenaLive from "@/components/ArenaLive";
 import DATA from "@/lib/arena-data.json";
 
-type Ans = { r: string; s: number; g: boolean };
-type Q = { id: string; q: string; gold: string; source: string; answerable: boolean; answers: Record<string, Ans> };
+type Q = { id: string; q: string; gold: string; source: string; answerable: boolean };
 type Model = { id: string; name: string; family: string; stage: string; site: string };
 type LB = Model & { score: number; grounded: number };
 
 const MODELS = DATA.models as Model[];
 const QS = DATA.questions as Q[];
 const BOARD = DATA.leaderboard as LB[];
-const MODEL_BY_ID: Record<string, Model> = Object.fromEntries(MODELS.map((m) => [m.id, m]));
 
-const SOURCE_LABEL: Record<string, string> = {
-  "case-law": "US case law",
-  sec: "SEC filings",
-  "fineweb-edu": "Educational web",
-};
-const FAMILIES = ["125M", "500M", "Gemma 2B"];
 
 function scoreColor(s: number) {
   // 0 -> red, 10 -> green
@@ -49,37 +40,12 @@ function ScorePill({ s }: { s: number }) {
 }
 
 export default function ArenaApp() {
-  const [qi, setQi] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const q = QS[qi];
-
-  function go(delta: number) {
-    setRevealed(false);
-    setQi((i) => (i + delta + QS.length) % QS.length);
-  }
-  function random() {
-    setRevealed(false);
-    setQi(Math.floor(Math.random() * QS.length));
-  }
-
-  // per-question ranking of the 13 models by score (desc), stable by leaderboard order on ties
-  const ranked = useMemo(() => {
-    const order = Object.fromEntries(BOARD.map((m, i) => [m.id, i]));
-    return MODELS.slice().sort((a, b) => {
-      const d = q.answers[b.id].s - q.answers[a.id].s;
-      return d !== 0 ? d : (order[a.id] ?? 0) - (order[b.id] ?? 0);
-    });
-  }, [qi]);
-
-  const topScore = ranked.length ? q.answers[ranked[0].id].s : 0;
-
   return (
     <div className="wrap">
       <nav className="nav">
         <span className="tag">VIZUARA · SLM ENGINEERING</span>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
           <a href="#arena" className="tag" style={{ fontSize: "0.72rem" }}>Arena</a>
-          <a href="#live" className="tag" style={{ fontSize: "0.72rem" }}>Live</a>
           <a href="#leaderboard" className="tag" style={{ fontSize: "0.72rem" }}>Leaderboard</a>
           <a href="#judge" className="tag" style={{ fontSize: "0.72rem" }}>The judge</a>
           <ThemePicker />
@@ -92,10 +58,10 @@ export default function ArenaApp() {
         <h1>SLM Arena</h1>
         <p className="lead">
           Thirteen small language models — three sizes (125M, 500M, Gemma&nbsp;2B) across their training
-          stages — answering the <em>same</em> held-out legal and financial questions. A blind LLM judge
-          scored every response out of 10, and for each question it was handed the gold answer and its
-          corpus evidence, so the scores are checkable rather than vibes. This is a replay of the real
-          evaluation — every answer below is exactly what the model produced.
+          stages — answering the <em>same</em> question live on a local GPU, then scored 0–10 by a
+          blind LLM judge. Ask one of the held-out evaluation questions, where the judge is handed
+          the gold answer so its scores are checkable, or write your own and watch all thirteen
+          take a run at it.
         </p>
       </header>
 
@@ -104,93 +70,13 @@ export default function ArenaApp() {
         <div className="panel stat"><div className="value">13</div><div className="tag label">Models</div></div>
         <div className="panel stat"><div className="value">3</div><div className="tag label">Sizes</div></div>
         <div className="panel stat"><div className="value">{DATA.n_questions_total}</div><div className="tag label">Held-out Qs</div></div>
-        <div className="panel stat"><div className="value">{DATA.n_questions_arena}</div><div className="tag label">In the arena</div></div>
+        <div className="panel stat"><div className="value">{DATA.n_questions_arena}</div><div className="tag label">Ready to ask</div></div>
         <div className="panel stat"><div className="value">1</div><div className="tag label">Blind judge</div></div>
       </div>
 
-      {/* ARENA */}
+      {/* ARENA — live generation + live judging */}
       <section id="arena" className="section">
-        <span className="tag">Arena · one question, thirteen answers</span>
-        <div className="panel card" style={{ marginTop: 12 }}>
-          {/* controls */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 16 }}>
-            <button className="btn" onClick={() => go(-1)}>‹ Prev</button>
-            <button className="btn" onClick={() => go(1)}>Next ›</button>
-            <button className="btn-primary" onClick={random}>Random question</button>
-            <span className="mono" style={{ color: "var(--fg-dim)", fontSize: "0.85rem" }}>
-              {qi + 1} / {QS.length}
-            </span>
-            <select
-              className="field"
-              style={{ marginLeft: "auto", maxWidth: 260 }}
-              value={qi}
-              onChange={(e) => { setRevealed(false); setQi(Number(e.target.value)); }}
-            >
-              {QS.map((qq, i) => (
-                <option key={qq.id} value={i}>
-                  {i + 1}. {qq.q.length > 46 ? qq.q.slice(0, 44) + "…" : qq.q}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* question */}
-          <div className="panel-inset" style={{ padding: "16px 18px" }}>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-              <span className="badge badge-accent">{SOURCE_LABEL[q.source] ?? q.source}</span>
-              <span className="badge">{q.answerable ? "answerable" : "not in context"}</span>
-            </div>
-            <div style={{ fontSize: "1.08rem", fontWeight: 600, lineHeight: 1.5 }}>{q.q}</div>
-            <div style={{ marginTop: 14 }}>
-              {revealed ? (
-                <div>
-                  <span className="tag" style={{ color: "var(--accent-2)" }}>Answer key (gold)</span>
-                  <p style={{ margin: "6px 0 0", color: "var(--fg)", lineHeight: 1.55 }}>{q.gold}</p>
-                </div>
-              ) : (
-                <button className="btn" onClick={() => setRevealed(true)}>Reveal the answer key ▾</button>
-              )}
-            </div>
-          </div>
-
-          {/* responses ranked */}
-          <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-            {ranked.map((m, i) => {
-              const a = q.answers[m.id];
-              const isTop = a.s === topScore && a.s > 0;
-              return (
-                <div
-                  key={m.id}
-                  className="panel-inset"
-                  style={{ padding: "13px 15px", borderColor: isTop ? "var(--accent)" : "var(--border-soft)" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                    <span className="mono" style={{ color: "var(--fg-dim)", width: 22 }}>{i + 1}</span>
-                    <a href={m.site} target="_blank" rel="noreferrer" style={{ fontWeight: 600, color: "var(--fg)", textDecoration: "none" }}>
-                      {m.name}
-                    </a>
-                    <span className="badge">{m.family}</span>
-                    <span className="badge">{m.stage}</span>
-                    {a.g && <span className="badge badge-accent" title="Judge marked this answer grounded in the source">grounded</span>}
-                    <span style={{ marginLeft: "auto" }}><ScorePill s={a.s} /></span>
-                  </div>
-                  <p className="mono" style={{ margin: "10px 0 0", fontSize: "0.86rem", color: "var(--fg-muted)", lineHeight: 1.5, whiteSpace: "pre-wrap", maxHeight: 150, overflow: "auto" }}>
-                    {a.r || "—"}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <p style={{ fontSize: "0.85rem", color: "var(--fg-dim)", marginTop: 10 }}>
-          Ranking is per-question, by the judge&apos;s 0–10 correctness score. Model names link to each model&apos;s own site
-          (training details, cost, architecture). Base models are prompted few-shot and are the floor.
-        </p>
-      </section>
-
-      {/* LIVE ARENA — your own question, answered by every model */}
-      <section id="live" className="section">
-        <LiveArena models={MODELS} />
+        <ArenaLive models={MODELS} questions={QS} />
       </section>
 
       {/* LEADERBOARD */}
@@ -232,10 +118,11 @@ export default function ArenaApp() {
           <span className="tag">How the judge works</span>
           <h2>An open-book judge, blind to the contestant</h2>
           <p style={{ marginTop: 8 }}>
-            Every answer is scored by a Gemini judge that never sees which model produced it. For each held-out
-            question the judge is handed the <strong>gold answer and the corpus evidence</strong>, then rates the
-            response for correctness (1–5, shown here on a 0–10 scale) and whether it is grounded in the source. Because
-            the judge has the answer key, the scores are checkable rather than a popularity contest.
+            Every answer is scored by a Gemini judge that never sees which model produced it. For a
+            <strong> held-out question</strong> the judge is handed the <strong>gold answer</strong>, so its
+            score is checkable against a known-good reference rather than a popularity contest. For a
+            question <strong>you write</strong> there is no answer key, so the judge grades from its own
+            knowledge — still blind to the model, but a weaker signal, and the arena labels it as such.
           </p>
           <p style={{ marginTop: 12 }}>
             The evaluation set is frozen and decontaminated (chunk-level dedup against public legal benchmarks), and
@@ -255,7 +142,7 @@ export default function ArenaApp() {
       <footer>
         <div className="grad-divider" />
         <div className="badge-line">Arena built &amp; models aligned by Harman Sandhu</div>
-        <div className="src">Vizuara AI Labs · SLM engineering · a replay of the real held-out evaluation</div>
+        <div className="src">Vizuara AI Labs · SLM engineering · live generation on a local GPU, judged by Gemini</div>
       </footer>
     </div>
   );
