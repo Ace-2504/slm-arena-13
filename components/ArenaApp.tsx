@@ -3,7 +3,7 @@ import ThemePicker from "@/components/ThemePicker";
 import ArenaLive from "@/components/ArenaLive";
 import DATA from "@/lib/arena-data.json";
 
-type Q = { id: string; q: string; gold: string; source: string; answerable: boolean };
+type Q = { id: string; q: string; ctx: string; gold: string; source: string; answerable: boolean };
 type Model = { id: string; name: string; family: string; stage: string; site: string };
 type LB = Model & { score: number; grounded: number };
 

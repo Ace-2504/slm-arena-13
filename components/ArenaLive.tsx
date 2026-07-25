@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
  *  - anything the user types, where the judge grades from its own knowledge (labelled as such).
  */
 type Model = { id: string; name: string; family: string; stage: string; site: string };
-type Q = { id: string; q: string; gold: string; source: string; answerable: boolean };
+type Q = { id: string; q: string; ctx: string; gold: string; source: string; answerable: boolean };
 type Row = {
   status: "queued" | "generating" | "answered" | "judging" | "done" | "error";
   text: string; secs?: number; tokens?: number;
@@ -93,7 +93,10 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
     setRows(Object.fromEntries(models.map((m) => [m.id, { status: "queued", text: "" } as Row])));
 
     const answers: Record<string, string> = {};
-    const ctx = isKnown ? undefined : undefined;   // held-out questions are asked closed-book here
+    // Held-out items are GROUNDED questions: the answer lives in a source document, exactly as in
+    // the offline evaluation. Without it every model correctly fails, so the document is supplied.
+    // A user-written question has no document, so it is asked closed-book.
+    const ctx = isKnown ? (picked?.ctx || undefined) : undefined;
 
     // Sequential: the GPU serialises generation anyway, and this streams results in.
     for (const m of models) {
@@ -160,9 +163,10 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
       <h2 style={{ marginTop: 0 }}>One question, {models.length} models, judged live</h2>
       <p style={{ margin: "6px 0 14px" }}>
         Pick a held-out question or write your own, and every model answers it in turn on the local
-        GPU. A blind LLM judge then scores each answer 0–10. Held-out questions carry a gold answer,
-        so the judge grades against a known-good reference; for your own questions it grades from
-        its own knowledge.
+        GPU. A blind LLM judge then scores each answer 0–10. A held-out question ships with its
+        source document and a gold answer — the models read the document, and the judge grades
+        against the reference. Your own question is asked closed-book and graded from the judge&apos;s
+        own knowledge.
       </p>
 
       {/* held-out question chips */}
@@ -198,13 +202,13 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
             : `Ask all ${models.length} & judge`}
         </button>
         <span className="badge">
-          {isKnown ? "held-out question · graded against the gold answer"
-                   : "your question · graded without a reference"}
+          {isKnown ? "held-out question · document supplied · graded against the gold answer"
+                   : "your question · closed-book · graded without a reference"}
         </span>
         {isKnown && picked && (
           <button className="btn" style={{ fontSize: "0.8rem", padding: "5px 10px" }}
             onClick={() => setShowGold((s) => !s)} disabled={busy}>
-            {showGold ? "hide answer key" : "show answer key"}
+            {showGold ? "hide answer key & document" : "show answer key & document"}
           </button>
         )}
       </div>
@@ -215,6 +219,16 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
             Answer key · {SOURCE_LABEL[picked.source] ?? picked.source}
           </span>
           <p style={{ margin: "6px 0 0", lineHeight: 1.55 }}>{picked.gold}</p>
+          {picked.ctx && (
+            <>
+              <div className="hairline" style={{ margin: "12px 0" }} />
+              <span className="tag">Source document given to every model</span>
+              <p className="mono" style={{ margin: "6px 0 0", fontSize: "0.78rem", lineHeight: 1.45,
+                   color: "var(--fg-muted)", whiteSpace: "pre-wrap", maxHeight: 200, overflow: "auto" }}>
+                {picked.ctx}
+              </p>
+            </>
+          )}
         </div>
       )}
 
