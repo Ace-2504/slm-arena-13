@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * The arena: one question -> all 13 models generate LIVE on the local GPU -> every answer is
@@ -17,7 +17,23 @@ type Row = {
   score?: number; grounded?: boolean; reason?: string; error?: string;
 };
 
-const ENDPOINT = process.env.NEXT_PUBLIC_INFERENCE_URL;
+// Endpoint is probed at runtime and overridable via ?api=<url> (quick-tunnel URLs rotate).
+const BUILD_ENDPOINT = process.env.NEXT_PUBLIC_INFERENCE_URL || "http://127.0.0.1:8000";
+
+function resolveEndpoint(): string {
+  if (typeof window === "undefined") return BUILD_ENDPOINT;
+  try {
+    const q = new URLSearchParams(window.location.search).get("api");
+    if (q !== null) {
+      if (q) { localStorage.setItem("slm-api", q); return q; }
+      localStorage.removeItem("slm-api");
+      return BUILD_ENDPOINT;
+    }
+    return localStorage.getItem("slm-api") || BUILD_ENDPOINT;
+  } catch {
+    return BUILD_ENDPOINT;
+  }
+}
 const SOURCE_LABEL: Record<string, string> = {
   "case-law": "US case law", sec: "SEC filings", "fineweb-edu": "Educational web",
 };
@@ -47,7 +63,18 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
   const [err, setErr] = useState("");
   const [showGold, setShowGold] = useState(false);
 
-  const live = Boolean(ENDPOINT);
+  const [live, setLive] = useState<boolean | null>(null);   // null = still probing
+  const [endpoint, setEndpoint] = useState(BUILD_ENDPOINT);
+  useEffect(() => {
+    let cancelled = false;
+    const ep = resolveEndpoint();
+    setEndpoint(ep);
+    const t = setTimeout(() => { if (!cancelled) setLive((v) => (v === null ? false : v)); }, 8000);
+    fetch(`${ep}/health`, { cache: "no-store" })
+      .then((r) => r.ok).catch(() => false)
+      .then((ok) => { if (!cancelled) { clearTimeout(t); setLive(ok); } });
+    return () => { cancelled = true; clearTimeout(t); };
+  }, []);
   const isKnown = picked !== null && picked.q === text.trim();
 
   function choose(q: Q) {
@@ -72,7 +99,7 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
     for (const m of models) {
       setRows((r) => ({ ...r, [m.id]: { ...r[m.id], status: "generating" } }));
       try {
-        const res = await fetch(`${ENDPOINT}/generate`, {
+        const res = await fetch(`${endpoint}/generate`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ model_id: m.id, prompt: question, question, context: ctx, max_new_tokens: 120 }),
         });
@@ -92,7 +119,7 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
     setRows((r) => Object.fromEntries(Object.entries(r).map(
       ([k, v]) => [k, v.status === "answered" ? { ...v, status: "judging" } : v])));
     try {
-      const jr = await fetch(`${ENDPOINT}/judge`, {
+      const jr = await fetch(`${endpoint}/judge`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, context: ctx, reference: picked?.gold, answers }),
       });
@@ -123,7 +150,7 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
         <span className="tag">Arena</span>
         <span className={live ? "badge badge-accent" : "badge"}>
-          {live ? "live · local GPU + LLM judge" : "not connected"}
+          {live === null ? "connecting…" : live ? "live · local GPU + LLM judge" : "run it locally to try this"}
         </span>
         {busy && <span className="badge">
           {phase === "generating" ? `generating ${done}/${models.length}` : "judging…"}
@@ -192,10 +219,10 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
       )}
 
       {err && <p style={{ color: "var(--accent)", marginTop: 12, fontSize: "0.88rem" }}>{err}</p>}
-      {!live && (
+      {live === false && (
         <p style={{ marginTop: 12, fontSize: "0.88rem", color: "var(--fg-dim)" }}>
-          Live generation runs the models on a local GPU, so it is available when this site is run
-          against a local inference server.
+          These models run on a local GPU. Start the inference server on this machine and reload —
+          the arena connects automatically.
         </p>
       )}
 
