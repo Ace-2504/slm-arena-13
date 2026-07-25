@@ -15,6 +15,9 @@ type LB = Model & {
 const MODELS = DATA.models as Model[];
 const QS = DATA.questions as Q[];
 const BOARD = DATA.leaderboard as LB[];
+// "rubric10" once the frozen set has been re-scored with the same 4-dimension rubric the live
+// arena uses; "correct1to5" while the leaderboard still carries the old 5-value mapping.
+const RUBRIC10 = (DATA as { rubric?: string }).rubric === "rubric10";
 
 const SOURCES: { key: string; label: string }[] = [
   { key: "case-law", label: "Case law" },
@@ -146,7 +149,9 @@ export default function ArenaApp() {
               </tbody>
             </table>
             <p style={{ fontSize: "0.85rem", color: "var(--fg-dim)", marginTop: 14, lineHeight: 1.6 }}>
-              <strong>Mean /10</strong> is the judge&apos;s correctness rating rescaled to 0–10.
+              <strong>Mean /10</strong> is {RUBRIC10
+                ? "the four-dimension rubric score (correctness + completeness + groundedness + clarity), the same scale the live arena uses"
+                : "the judge's 1–5 correctness rating rescaled to 0–10"}.
               <strong> Grounded</strong> is the share of answers the judge found free of invented
               claims — an independent signal, not a restatement of correctness (670 answers were
               grounded but wrong, 50 correct but ungrounded). <strong>Fabrication</strong> counts
@@ -208,10 +213,10 @@ export default function ArenaApp() {
               The judge has <strong>not been calibrated against human labels</strong>, so treat small
               differences cautiously — the calibration tool exists, but the human pass has not been
               run. It is a single judge model, so its blind spots are systematic rather than averaged
-              away. And the leaderboard still uses the offline 1–5 correctness scale, which maps to
-              only five possible values per answer, whereas the live arena uses the finer
-              four-dimension rubric above — so one arena score and one leaderboard mean are not the
-              same measurement. Full methodology, confidence intervals and paired-significance tests
+              away. {RUBRIC10
+                ? "The leaderboard has been re-scored with the same four-dimension rubric the live arena uses, so an arena score and a leaderboard mean are now the same measurement on the same scale."
+                : "And the leaderboard still uses the offline 1–5 correctness scale, which maps to only five possible values per answer, whereas the live arena uses the finer four-dimension rubric above — so one arena score and one leaderboard mean are not the same measurement."}{" "}
+              Full methodology, confidence intervals and paired-significance tests
               live in the evaluation report behind each model&apos;s site.
             </p>
           </div>
