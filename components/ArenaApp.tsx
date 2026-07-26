@@ -51,7 +51,7 @@ export default function ArenaApp() {
   return (
     <div className="wrap">
       <nav className="nav">
-        <span className="tag">VIZUARA · SLM ENGINEERING</span>
+        <span className="tag">SLM ENGINEERING</span>
         <ThemePicker />
       </nav>
 
@@ -243,7 +243,7 @@ export default function ArenaApp() {
       <footer>
         <div className="grad-divider" />
         <div className="badge-line">Arena built &amp; models aligned by Harman Sandhu</div>
-        <div className="src">Vizuara AI Labs · SLM engineering · live generation, judged by Gemini</div>
+        <div className="src">Small language models · live generation, judged by Gemini</div>
       </footer>
     </div>
   );
