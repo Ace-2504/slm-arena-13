@@ -1,5 +1,8 @@
 "use client";
 
+import { Fragment, useState } from "react";
+import FineTunePie from "@/components/FineTunePie";
+
 /**
  * Cost to build — what the thirteen models actually cost.
  *
@@ -20,13 +23,6 @@ const PHASES: { phase: string; detail: string; cost: number }[] = [
   { phase: "Image builds & exports", detail: "container builds, checkpoint downloads", cost: 0.05 },
 ];
 
-const ACCOUNTS: { name: string; cost: number; used: string }[] = [
-  { name: "ace-2504", cost: 30.36, used: "v1 pretraining, the extension leg, first-pass fine-tunes" },
-  { name: "ace-compoz", cost: 30.29, used: "final fine-tuning, all alignment, the entire evaluation" },
-  { name: "singh1621", cost: 28.26, used: "the e4 continued-pretraining leg" },
-  { name: "aceaynon2504", cost: 27.48, used: "the e2 continued-pretraining leg" },
-];
-
 const GEMINI_INR = 2215;
 
 function Bar({ pct }: { pct: number }) {
@@ -38,6 +34,8 @@ function Bar({ pct }: { pct: number }) {
 }
 
 export default function CostToBuild() {
+  const [openFt, setOpenFt] = useState(false);
+
   return (
     <div className="panel card breakout">
       <span className="tag">Cost to build</span>
@@ -61,7 +59,7 @@ export default function CostToBuild() {
           <div className="tag label">Models built</div>
         </div>
         <div className="panel stat">
-          <div className="value mono">4</div>
+          <div className="value mono">1</div>
           <div className="tag label">Modal accounts</div>
         </div>
       </div>
@@ -80,16 +78,43 @@ export default function CostToBuild() {
           <tbody>
             {PHASES.map((p) => {
               const pct = (p.cost / MODAL_TOTAL) * 100;
+              const expandable = p.phase === "Fine-tuning";
               return (
-                <tr key={p.phase}>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{p.phase}</div>
-                    <div style={{ color: "var(--fg-muted)", fontSize: "0.85rem", marginTop: 2 }}>{p.detail}</div>
-                  </td>
-                  <td className="num" style={{ fontWeight: 600 }}>${p.cost.toFixed(2)}</td>
-                  <td style={{ width: 130, minWidth: 130 }}><Bar pct={pct} /></td>
-                  <td className="num" style={{ color: "var(--fg-muted)" }}>{pct.toFixed(1)}%</td>
-                </tr>
+                <Fragment key={p.phase}>
+                  <tr
+                    className={expandable ? "row-expand" : undefined}
+                    onClick={expandable ? () => setOpenFt((v) => !v) : undefined}
+                    tabIndex={expandable ? 0 : undefined}
+                    role={expandable ? "button" : undefined}
+                    aria-expanded={expandable ? openFt : undefined}
+                    onKeyDown={expandable ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpenFt((v) => !v); }
+                    } : undefined}
+                  >
+                    <td>
+                      <div style={{ fontWeight: 600 }}>
+                        {expandable && <span className={openFt ? "chev open" : "chev"}>▶</span>}{expandable ? " " : ""}
+                        {p.phase}
+                      </div>
+                      <div style={{ color: "var(--fg-muted)", fontSize: "0.85rem", marginTop: 2 }}>
+                        {p.detail}
+                        {expandable && (
+                          <span style={{ color: "var(--accent)" }}> — click for the per-model split</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="num" style={{ fontWeight: 600 }}>${p.cost.toFixed(2)}</td>
+                    <td style={{ width: 130, minWidth: 130 }}><Bar pct={pct} /></td>
+                    <td className="num" style={{ color: "var(--fg-muted)" }}>{pct.toFixed(1)}%</td>
+                  </tr>
+                  {expandable && openFt && (
+                    <tr>
+                      <td colSpan={4} style={{ padding: "16px 0 22px" }}>
+                        <FineTunePie />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
             <tr>
@@ -108,28 +133,6 @@ export default function CostToBuild() {
         Evaluation cost <strong>nearly four times</strong> all the alignment work combined, which is
         the line most projects never publish.
       </p>
-
-      <h3 style={{ margin: "28px 0 10px", fontSize: "1.05rem", fontWeight: 600 }}>Split across four accounts</h3>
-      <div style={{ overflowX: "auto" }}>
-        <table className="lb-table" style={{ minWidth: 620 }}>
-          <thead>
-            <tr>
-              <th>Workspace</th>
-              <th>What ran there</th>
-              <th style={{ textAlign: "right" }}>Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ACCOUNTS.map((a) => (
-              <tr key={a.name}>
-                <td className="mono" style={{ fontWeight: 600 }}>{a.name}</td>
-                <td style={{ color: "var(--fg-muted)" }}>{a.used}</td>
-                <td className="num" style={{ fontWeight: 600 }}>${a.cost.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
       <h3 style={{ margin: "28px 0 10px", fontSize: "1.05rem", fontWeight: 600 }}>Gemini API</h3>
       <div style={{ overflowX: "auto" }}>

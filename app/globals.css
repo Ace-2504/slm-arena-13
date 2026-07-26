@@ -160,3 +160,44 @@ footer .src { color: var(--fg-dim); font-size: 0.82rem; margin-top: 8px; }
 .hero { text-align: center; }
 .hero .brand { margin-left: auto; margin-right: auto; }
 .hero p.lead { margin-left: auto; margin-right: auto; }
+
+/* ---- data-viz: categorical series colours -------------------------------
+   Six validated hues (CVD-checked, adjacent pairs separated under protan,
+   deutan and tritan). Light steps are the base, matching :root = parchment;
+   the five dark themes re-step the same six hues for a dark surface.         */
+.viz {
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+  --series-4: #eda100; --series-5: #e87ba4; --series-6: #4a3aa7;
+}
+[data-theme="amber"] .viz,
+[data-theme="cobalt"] .viz,
+[data-theme="phosphor"] .viz,
+[data-theme="ember"] .viz,
+[data-theme="nord"] .viz {
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+  --series-4: #c98500; --series-5: #d55181; --series-6: #9085e9;
+}
+
+.ft-pie-grid { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+.ft-tip {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 11px; font-size: 0.84rem; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,.22);
+}
+.ft-legend { list-style: none; margin: 0; padding: 0; flex: 1 1 300px; min-width: 280px; }
+.ft-legend li {
+  display: flex; align-items: center; gap: 10px; padding: 7px 0;
+  border-bottom: 1px solid var(--border-soft); transition: opacity 120ms ease;
+}
+.ft-legend li:last-child { border-bottom: none; }
+.ft-chip { width: 12px; height: 12px; border-radius: 3px; flex: 0 0 auto; }
+.ft-name { flex: 1 1 auto; font-size: 0.92rem; }
+.ft-val { min-width: 62px; text-align: right; font-size: 0.9rem; }
+.ft-pct { min-width: 52px; text-align: right; font-size: 0.86rem; color: var(--fg-muted); }
+.ft-total { border-top: 1px solid var(--border) !important; margin-top: 4px; padding-top: 9px !important; }
+.ft-foot { color: var(--fg-muted); font-size: 0.88rem; line-height: 1.6; margin: 16px 0 0; }
+.row-expand { cursor: pointer; }
+.row-expand:hover { background: var(--panel-2); }
+.chev { display: inline-block; transition: transform 140ms ease; color: var(--accent); font-size: 0.8rem; }
+.chev.open { transform: rotate(90deg); }
