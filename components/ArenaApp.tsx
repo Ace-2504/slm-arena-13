@@ -3,6 +3,7 @@ import { useState } from "react";
 import ThemePicker from "@/components/ThemePicker";
 import ArenaLive from "@/components/ArenaLive";
 import ModelMap from "@/components/ModelMap";
+import CostToBuild from "@/components/CostToBuild";
 import DATA from "@/lib/arena-data.json";
 
 type Q = { id: string; q: string; ctx: string; gold: string; source: string; answerable: boolean };
@@ -38,11 +39,12 @@ function ScorePill({ s }: { s: number }) {
   );
 }
 
-type Tab = "arena" | "leaderboard" | "judge";
+type Tab = "arena" | "leaderboard" | "judge" | "cost";
 const TABS: { id: Tab; label: string }[] = [
   { id: "arena", label: "Arena" },
   { id: "leaderboard", label: "Leaderboard" },
   { id: "judge", label: "How the judge works" },
+  { id: "cost", label: "Cost to build" },
 ];
 
 export default function ArenaApp() {
@@ -237,6 +239,12 @@ export default function ArenaApp() {
               live in the evaluation report behind each model&apos;s site.
             </p>
           </div>
+        </section>
+      )}
+
+      {tab === "cost" && (
+        <section id="cost" className="section" style={{ marginTop: 0 }}>
+          <CostToBuild />
         </section>
       )}
 
