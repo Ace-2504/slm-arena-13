@@ -89,8 +89,12 @@ export default function ModelText({ text }: { text: string }) {
         if (!isQuote) return <React.Fragment key={si}>{body}</React.Fragment>;
         return (
           <span key={si} style={{
+            // Set apart by the rule and a faint tint, NOT by fading the text — a quoted passage
+            // is still meant to be read.
             display: "block", borderLeft: "2px solid var(--accent-2)", paddingLeft: 10,
-            margin: "6px 0", color: "var(--fg-muted)", fontStyle: "italic",
+            margin: "6px 0", color: "var(--fg)", fontStyle: "italic",
+            background: "color-mix(in srgb, var(--accent-2) 7%, transparent)",
+            borderRadius: "0 6px 6px 0", paddingTop: 4, paddingBottom: 4,
           }}>
             {body}
           </span>

@@ -267,9 +267,11 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
                   </span>
                 </div>
                 <p className="mono" style={{
-                  margin: "9px 0 0", fontSize: "0.85rem", lineHeight: 1.5, whiteSpace: "pre-wrap",
-                  color: row.error ? "var(--accent-3)" : "var(--fg-muted)",
-                  maxHeight: 170, overflow: "auto",
+                  // The answer is the point of the page — full-contrast --fg (12.6:1), not the
+                  // muted token (4.3:1, under the 4.5:1 minimum and worse again on a projector).
+                  margin: "9px 0 0", fontSize: "0.88rem", lineHeight: 1.6, whiteSpace: "pre-wrap",
+                  color: row.error ? "var(--accent-3)" : "var(--fg)",
+                  maxHeight: 190, overflow: "auto",
                 }}>
                   {row.error ? row.error
                     : row.status === "queued" ? "—"
@@ -286,7 +288,7 @@ export default function ArenaLive({ models, questions }: { models: Model[]; ques
                   </div>
                 )}
                 {row.reason && (
-                  <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: "var(--fg-dim)", fontStyle: "italic" }}>
+                  <p style={{ margin: "8px 0 0", fontSize: "0.82rem", color: "var(--fg-muted)", fontStyle: "italic" }}>
                     judge: {row.reason}
                   </p>
                 )}
