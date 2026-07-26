@@ -107,13 +107,6 @@ export default function CostToBuild() {
                     <td style={{ width: 130, minWidth: 130 }}><Bar pct={pct} /></td>
                     <td className="num" style={{ color: "var(--fg-muted)" }}>{pct.toFixed(1)}%</td>
                   </tr>
-                  {expandable && openFt && (
-                    <tr>
-                      <td colSpan={4} style={{ padding: "16px 0 22px" }}>
-                        <FineTunePie />
-                      </td>
-                    </tr>
-                  )}
                 </Fragment>
               );
             })}
@@ -126,6 +119,14 @@ export default function CostToBuild() {
           </tbody>
         </table>
       </div>
+
+      {/* the fine-tuning split lives outside the table's scroller, so it always gets full width */}
+      {openFt && (
+        <div className="panel-inset" style={{ padding: "18px 18px 20px", marginTop: 14 }}>
+          <span className="tag" style={{ color: "var(--accent)" }}>Fine-tuning · per model</span>
+          <FineTunePie />
+        </div>
+      )}
 
       <p style={{ color: "var(--fg-muted)", fontSize: "0.9rem", lineHeight: 1.65, marginTop: 14 }}>
         Pretraining the 125M from scratch is <strong>60% of everything</strong>. Fine-tuning three
